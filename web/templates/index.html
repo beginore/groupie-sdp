@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artists</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <h1>Groupie-Tracker</h1>
+    <div class="search-container">
+        <input type="text" id="search-bar" placeholder="Search artists, members, etc." onkeyup="fetchSuggestions()" />
+        <div id="suggestions" class="suggestions-box"></div>
+    </div>
+
+    <div class="container">
+        {{range .}}
+        <form method="GET" class="artist">
+            <a href="/artist/{{.Id}}">
+            <p class="artist-name">{{.Name}}</p>
+            <img src="{{.Image}}" alt="{{.Name}}" /><br>
+            </a>
+        </form>
+        {{end}}
+    </div>
+
+    <script>
+        async function fetchSuggestions() {
+            const query = document.getElementById("search-bar").value;
+            if (query.length < 2) {
+                document.getElementById("suggestions").innerHTML = '';
+                return;
+            }
+
+            const response = await fetch(`/search?q=${query}`);
+            const suggestions = await response.json();
+
+            let suggestionsHTML = '';
+            suggestions.forEach(item => {
+                suggestionsHTML += `<div class="suggestion-item"><a href="${item.url}">${item.name} - <em>${item.type}</em></a></div>`;
+            });
+            document.getElementById("suggestions").innerHTML = suggestionsHTML;
+        }
+    </script>
+</body>
+</html>

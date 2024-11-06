@@ -122,3 +122,23 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
 }
+
+type SearchStrategy interface {
+	Search(query string, artists []Artist) []map[string]string
+}
+
+type NameSearch struct{}
+type MemberSearch struct{}
+type LocationSearch struct{}
+
+func (s NameSearch) Search(query string, artists []Artist) []map[string]string {
+	var results []map[string]string
+	for _, artist := range artists {
+		if strings.Contains(strings.ToLower(artist.Name), query) {
+			results = append(results, map[string]string{
+				"type": "artist/band", "name": artist.Name, "url": fmt.Sprintf("/artist/%d", artist.Id),
+			})
+		}
+	}
+	return results
+}

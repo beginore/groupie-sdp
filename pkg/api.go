@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -16,6 +17,19 @@ type Artist struct {
 	FirstAlbum     string              `json:"firstAlbum"`
 	Relations      string              `json:"relations"`
 	DatesLocations map[string][]string `json:"-"`
+}
+
+func (a *Artist) Clone() *Artist {
+	clone := *a
+	clone.Members = make([]string, len(a.Members))
+	copy(clone.Members, a.Members)
+
+	clone.DatesLocations = make(map[string][]string)
+	for k, v := range a.DatesLocations {
+		clone.DatesLocations[k] = append([]string{}, v...)
+	}
+
+	return &clone
 }
 
 var instance *APIClient
@@ -54,6 +68,25 @@ func GetAPI() error {
 	}
 
 	return nil
+}
+
+type ArtistFacade struct {
+	client *APIClient
+}
+
+func NewArtistFacade() *ArtistFacade {
+	return &ArtistFacade{
+		client: GetAPIClient(),
+	}
+}
+
+func (af *ArtistFacade) GetCompleteArtistInfo(id int) (*Artist, error) {
+	if id < 1 || id > len(af.client.artists) {
+		return nil, fmt.Errorf("artist not found")
+	}
+	artist := &af.client.artists[id-1]
+	err := fetchRelationsForArtist(artist)
+	return artist, err
 }
 
 func fetchRelationsForArtist(artist *Artist) error {
